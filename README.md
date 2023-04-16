@@ -1,4 +1,5 @@
-# SFS-MoonSharp-Loader
+# COSMOSS-MoonSharp-Loader
+COSMOSS - Custom Open-source System for MOonsharp for Spaceflight Simulator
 A simple Lua/MoonSharp script loader for SFS.
 
 ## Current features (as of v0.1):
