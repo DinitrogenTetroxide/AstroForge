@@ -1,5 +1,5 @@
 # AstroForge
-A simple Lua/MoonSharp script loader for SFS.
+A simple Lua (NLua) script loader for SFS.
 
 ## Current features (as of v0.1):
 * A script loader with basic Begin() and Loop() functions,
