@@ -4,6 +4,7 @@ using System;
 using System.Reflection;
 using NLua;
 using System.Linq;
+using SFS.World;
 
 namespace LuaInterpreter
 {
@@ -19,9 +20,9 @@ namespace LuaInterpreter
         public string Version = "1.0.0";
         public string Description = "Default Lua plugin description.";
 
-        public void OnUpdate() 
+        public void OnUpdate(Lua script) 
         {
-            // Might be useful later in the development of this mod
+            script["currentRocket"] = PlayerController.main.player.Value as Rocket;
         }
 
         /// <summary>

@@ -60,7 +60,7 @@ namespace LuaInterpreter
                         loop.Call();
                         var lp = script["LuaPlugin"] as LuaPlugin;
                         script["this"] = script;
-                        lp.OnUpdate();
+                        lp.OnUpdate(script);
                     }
                     yield return null;
                 }
