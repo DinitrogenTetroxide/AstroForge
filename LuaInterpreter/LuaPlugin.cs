@@ -20,10 +20,7 @@ namespace LuaInterpreter
         public string Version = "1.0.0";
         public string Description = "Default Lua plugin description.";
 
-        public void OnUpdate(Lua script) 
-        {
-            script["currentRocket"] = PlayerController.main.player.Value as Rocket;
-        }
+        public void OnUpdate(Lua script){}
 
         /// <summary>
         /// Initialize the LuaPlugin and add the plugin to the mod menu.

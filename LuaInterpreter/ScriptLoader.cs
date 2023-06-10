@@ -1,10 +1,12 @@
 ﻿using ModLoader.Helpers;
 using NLua;
+using SFS.World;
 using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 namespace LuaInterpreter
 {
@@ -13,8 +15,8 @@ namespace LuaInterpreter
     {
         public void Load() 
         {
+            var a = SceneManager.GetActiveScene().name;
             List<Lua> scrs = new List<Lua>();
-
 
             // Load all scripts
 
@@ -43,10 +45,12 @@ namespace LuaInterpreter
             {
                 foreach (Lua script in s)
                 {
+                    
                     var plugin = script["LuaPlugin"] as LuaPlugin;
                     plugin.Init();
                     var bgn = script["Begin"] as LuaFunction;
                     bgn.Call();
+                    script["controllingARocket"] = false;
                 }
             }
 
@@ -58,9 +62,19 @@ namespace LuaInterpreter
                     {
                         var loop = script["Loop"] as LuaFunction;
                         loop.Call();
-                        var lp = script["LuaPlugin"] as LuaPlugin;
+
                         script["this"] = script;
-                        lp.OnUpdate(script);
+
+                        if (PlayerController.main != null) // Not doing this will cause NullRefException outside of World_PC
+                        if (PlayerController.main.player.Value as Rocket != null)
+                        {
+                            script["controllingARocket"] = true;
+                            script["currentRocket"] = PlayerController.main.player.Value as Rocket;
+                        } else 
+                        {
+                            script["controllingARocket"] = false;
+                            script["currentRocket"] = KeraLua.LuaType.Nil;
+                        }
                     }
                     yield return null;
                 }
