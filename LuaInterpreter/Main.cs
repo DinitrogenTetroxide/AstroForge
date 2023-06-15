@@ -6,6 +6,7 @@ using System;
 using UITools;
 using System.Collections.Generic;
 using SFS.IO;
+using HarmonyLib;
 
 namespace LuaInterpreter
 {
@@ -15,7 +16,7 @@ namespace LuaInterpreter
         public override string DisplayName => "AstroForge";
         public override string Author => "N2O4";
         public override string MinimumGameVersionNecessary => "1.5.10.2";
-        public override string ModVersion => "1.0.2";
+        public override string ModVersion => "1.1-indev";
         public override string Description => "A very simple Lua (NLua) script loader.";
         public override string IconLink => "https://i.imgur.com/JCK73S8.png";
 
@@ -28,7 +29,7 @@ namespace LuaInterpreter
         public string InterpreterPath;
         public static string dllDirectory;
 
-        public ScriptLoader loader;
+        public static ScriptLoader loader;
 
         public override void Early_Load()
         {
@@ -70,7 +71,9 @@ namespace LuaInterpreter
         public override void Load()
         {
             loader = new ScriptLoader();
-            loader.Load();
+            loader.LoadPlugins();
+            var harmony = new Harmony("com.N2O4.AstroForgeTexturePatch");
+            harmony.PatchAll();
         }
     }
 }

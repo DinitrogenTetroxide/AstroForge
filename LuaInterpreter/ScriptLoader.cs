@@ -1,19 +1,21 @@
 ﻿using ModLoader.Helpers;
 using NLua;
+using SFS.Parts;
+using SFS.Parts.Modules;
 using SFS.World;
 using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
 namespace LuaInterpreter
 {
-    // Token: 0x02000070 RID: 112
     public class ScriptLoader
     {
-        public void Load() 
+        public void LoadPlugins() 
         {
             var a = SceneManager.GetActiveScene().name;
             List<Lua> scrs = new List<Lua>();
@@ -32,10 +34,51 @@ namespace LuaInterpreter
             }
 
             Functions.OnStart(scrs.ToArray());
-            new GameObject().AddComponent<BlankMB>().StartCoroutine(Functions.OnFrame(scrs.ToArray()));
+            new GameObject().AddComponent<BlankMB>().StartCoroutine(Functions.OnFrame(scrs.ToArray(), false));
             SceneHelper.OnSceneLoaded += () =>
             {
-                new GameObject().AddComponent<BlankMB>().StartCoroutine(Functions.OnFrame(scrs.ToArray()));
+                new GameObject().AddComponent<BlankMB>().StartCoroutine(Functions.OnFrame(scrs.ToArray(), false));
+            };
+        }
+
+        public void LoadCustomParts()
+        {
+            List<CustomPartScript> cps = new List<CustomPartScript>();
+
+            foreach (var part in ResourcesLoader.GetFiles_Array<Part>("Parts").ToList()) 
+            {
+                CustomPartScript partScript = part.GetComponent<CustomPartScript>();
+                if (partScript != null && partScript.enabled)
+                {
+                    cps.Add(partScript);
+                }
+                CustomPartScript[] cic = part.GetComponentsInChildren<CustomPartScript>(false);
+                if (cic != null)
+                {
+                    foreach(var c in cic)
+                    {
+                        cps.Add(c);
+                    }
+                }
+            }
+            List<Lua> luas = new List<Lua>();
+            foreach (CustomPartScript cpScript in cps)
+            {
+                Lua l = new Lua();
+                l.LoadCLRPackage();
+                foreach(var scriptVars in cpScript.variables)
+                {
+                    l[scriptVars.Key] = scriptVars.Value;
+                }
+                l["internal_exCondId"] = (int)cpScript.loadIn;
+                l.DoString(cpScript.script);
+                luas.Add(l);
+            }
+
+            SceneManager.sceneLoaded += (Scene scene, LoadSceneMode m) =>
+            {
+                if (scene.name == "World_PC" || scene.name == "Build_PC")
+                    new GameObject().AddComponent<BlankMB>().StartCoroutine(Functions.OnFrame(luas.ToArray(), true));
             };
         }
 
@@ -54,27 +97,45 @@ namespace LuaInterpreter
                 }
             }
 
-            public static IEnumerator OnFrame(Lua[] s)
+            public static IEnumerator OnFrame(Lua[] s, bool fromPack)
             {
+                int scene;
                 while (true)
                 {
+                    switch (SceneManager.GetActiveScene().name)
+                    {
+                        case "Build_PC":
+                            scene = 0;
+                            break;
+                        case "World_PC":
+                            scene = 1;
+                            break;
+                        default:
+                            scene = -1;
+                            break;
+                    }
                     foreach (Lua script in s)
                     {
+                        if (PlayerController.main != null) // Not doing this will cause NullRefException outside of World_PC
+                        {
+                            var rkt = PlayerController.main.player.Value as Rocket;
+                            if (rkt != null)
+                            {
+                                script["controllingARocket"] = true;
+                                script["currentRocket"] = rkt.GetType();
+                            }
+                            else
+                            {
+                                script["controllingARocket"] = false;
+                                script["currentRocket"] = KeraLua.LuaType.Nil;
+                            }
+                        } else
+                            script["controllingARocket"] = false;
+
                         var loop = script["Loop"] as LuaFunction;
                         loop.Call();
 
                         script["this"] = script;
-
-                        if (PlayerController.main != null) // Not doing this will cause NullRefException outside of World_PC
-                        if (PlayerController.main.player.Value as Rocket != null)
-                        {
-                            script["controllingARocket"] = true;
-                            script["currentRocket"] = PlayerController.main.player.Value as Rocket;
-                        } else 
-                        {
-                            script["controllingARocket"] = false;
-                            script["currentRocket"] = KeraLua.LuaType.Nil;
-                        }
                     }
                     yield return null;
                 }
