@@ -10,6 +10,7 @@ using System.IO;
 using System.Linq;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using LuaInterpreter.CustomParts;
 
 namespace LuaInterpreter
 {
@@ -71,7 +72,7 @@ namespace LuaInterpreter
                     l[scriptVars.Key] = scriptVars.Value;
                 }
                 l["internal_exCondId"] = (int)cpScript.loadIn;
-                l.DoString(cpScript.script);
+                l.DoString(cpScript.scriptContent);
                 luas.Add(l);
             }
 
